@@ -14,7 +14,9 @@ db = SQLAlchemy(app)
 movies = [
     {"id": 1, "title": "Avengers: Endgame", "price": 12},
     {"id": 2, "title": "Spider-Man: No Way Home", "price": 10},
-    {"id": 3, "title": "Inception", "price": 8}
+    {"id": 3, "title": "Inception", "price": 8},
+    {"id": 4, "title": "Aaron", "price": 34},
+    {"id": 5, "title": "Alvin and the Chipmunks", "price": 9864}
 ]
 
 # 📌 Define the Booking Model (Table)
