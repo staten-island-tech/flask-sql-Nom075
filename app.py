@@ -1,73 +1,77 @@
-from flask import Flask, render_template, request, redirect, url_for
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, render_template, request, redirect, url_for, flash
+from models import db, Question
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///quiz.db'
+app.config['SECRET_KEY'] = 'your-secret-key'
+db.init_app(app)
 
-# 📌 Tell Flask where the database file will be stored
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bookings.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# 📌 Create the database object
-db = SQLAlchemy(app)
-
-# 🎬 Sample movie data
-movies = [
-    {"id": 1, "title": "Avengers: Endgame", "price": 12},
-    {"id": 2, "title": "Spider-Man: No Way Home", "price": 10},
-    {"id": 3, "title": "Inception", "price": 8},
-    {"id": 4, "title": "Aaron", "price": 34},
-    {"id": 5, "title": "Alvin and the Chipmunks", "price": 9864}
-]
-
-# 📌 Define the Booking Model (Table)
-class Booking(db.Model):
-    id = db.Column(db.Integer, primary_key=True)  # Unique ID for each booking
-    name = db.Column(db.String(100), nullable=False)  # User's name
-    movie_title = db.Column(db.String(100), nullable=False)  # Movie booked
-    seats = db.Column(db.Integer, nullable=False)  # Number of seats booked
-
-# 📌 Create the database table
-with app.app_context():
+@app.before_first_request
+def create_tables():
     db.create_all()
 
-@app.route('/')
-def home():
-    return render_template('index.html', movies=movies)
+#Adding questions 
 
-@app.route('/book/<int:movie_id>', methods=['GET', 'POST'])
-def book(movie_id):
-    # Find the movie using movie_id
-    movie = next((m for m in movies if m["id"] == movie_id), None)
-
-    if not movie:
-        return "Movie not found", 404
-
+@app.route('/add', methods=['GET', 'POST'])
+def add_question():
     if request.method == 'POST':
-        name = request.form['name']
-        seats = int(request.form['seats'])
+        try:
+            new_q = Question(
+                question_text=request.form['question_text'],
+                option_a=request.form['option_a'],
+                option_b=request.form['option_b'],
+                option_c=request.form['option_c'],
+                option_d=request.form['option_d'],
+                correct_answer=request.form['correct_answer'].upper()
+            )
+            db.session.add(new_q)
+            db.session.commit()
+            flash("Question added successfully!", "success")
+            return redirect(url_for('admin'))
+        except Exception as e:
+            flash(f"Error: {e}", "danger")
+    return render_template('add_question.html')
 
-        # 📌 Create a new Booking and save it to the database
-        new_booking = Booking(name=name, movie_title=movie["title"], seats=seats)
-        db.session.add(new_booking)
+#Read the questions
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/quiz')
+def quiz():
+    questions = Question.query.all()
+    return render_template('quiz.html', questions=questions)
+
+#Updating and changing the questions
+
+@app.route('/edit/<int:question_id>', methods=['GET', 'POST'])
+def edit_question(question_id):
+    question = Question.query.get_or_404(question_id)
+    if request.method == 'POST':
+        question.question_text = request.form['question_text']
+        question.option_a = request.form['option_a']
+        question.option_b = request.form['option_b']
+        question.option_c = request.form['option_c']
+        question.option_d = request.form['option_d']
+        question.correct_answer = request.form['correct_answer'].upper()
         db.session.commit()
-
-        return redirect(url_for('confirmation', name=name, movie_title=movie["title"], seats=seats))
-
-    return render_template('book.html', movie=movie)
-
-@app.route('/confirmation')
-def confirmation():
-    name = request.args.get('name')
-    movie_title = request.args.get('movie_title')
-    seats = request.args.get('seats')
-    return render_template('confirmation.html', name=name, movie_title=movie_title, seats=seats)
-
-@app.route('/admin/bookings')
-def view_bookings():
-    bookings = Booking.query.all()
-    return render_template('bookings.html', bookings=bookings)
+        return redirect(url_for('admin'))
+    return render_template('edit_question.html', question=question)
 
 
+#Deleting questions
 
-if __name__ == '__main__':
-    app.run(debug=True)
+@app.route('/delete/<int:question_id>')
+def delete_question(question_id):
+    question = Question.query.get_or_404(question_id)
+    db.session.delete(question)
+    db.session.commit()
+    return redirect(url_for('admin'))
+
+#Admin dashboard
+
+@app.route('/admin')
+def admin():
+    questions = Question.query.all()
+    return render_template('admin.html', questions=questions)
