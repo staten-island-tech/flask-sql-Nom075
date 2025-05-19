@@ -1,11 +1,16 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
-from models import db, Question  # Make sure you have the Question model
-
+# app.py
+from flask import Flask
+from models import db
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///quiz.db'
 app.config['SECRET_KEY'] = 'secret'
 db.init_app(app)
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True)
 
 #Adding questions 
 
@@ -72,8 +77,3 @@ def delete_question(question_id):
 def admin():
     questions = Question.query.all()
     return render_template('admin.html', questions=questions)
-
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True)
