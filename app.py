@@ -1,10 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
-from models import db, Question  # Make sure you have the Question model
-
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from models import db, Question
+import random
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///quiz.db'
-app.config['SECRET_KEY'] = 'secret'
+app.config['SECRET_KEY'] = 'your_secret_key_here'
+
 db.init_app(app)
 
 #Adding questions 
@@ -35,10 +36,41 @@ def add_question():
 def index():
     return render_template('index.html')
 
-@app.route('/quiz')
-def quiz():
-    questions = Question.query.all()
-    return render_template('quiz.html', questions=questions)
+@app.route('/start')
+def start_game():
+    session['lives'] = 3
+    session['current_q'] = 0
+    session['question_order'] = [q.id for q in Question.query.all()]
+    random.shuffle(session['question_order'])
+    return redirect(url_for('play_question'))
+
+@app.route('/play', methods=['GET', 'POST'])
+def play_question():
+    if 'lives' not in session or 'current_q' not in session:
+        return redirect(url_for('start_game'))
+
+    if session['lives'] <= 0:
+        return render_template('game_over.html')
+
+    question_ids = session['question_order']
+    current_index = session['current_q']
+
+    if current_index >= len(question_ids):
+        return render_template('you_win.html')
+
+    question = Question.query.get(question_ids[current_index])
+
+    if request.method == 'POST':
+        selected = request.form.get('answer')
+        if selected == question.correct_answer:
+            session['current_q'] += 1
+            return redirect(url_for('play_question'))
+        else:
+            session['lives'] -= 1
+            flash('Wrong answer! You lost a life.', 'danger')
+
+    return render_template('question.html', question=question, lives=session['lives'])
+
 
 #Updating and changing the questions
 
@@ -54,7 +86,7 @@ def edit_question(question_id):
         question.correct_answer = request.form['correct_answer'].upper()
         db.session.commit()
         return redirect(url_for('admin'))
-    return render_template('edit_question.html', question=question)
+    return render_template('edit_questions.html', question=question)
 
 
 #Deleting questions
@@ -72,6 +104,15 @@ def delete_question(question_id):
 def admin():
     questions = Question.query.all()
     return render_template('admin.html', questions=questions)
+
+
+
+
+
+
+
+
+
 
 if __name__ == '__main__':
     with app.app_context():

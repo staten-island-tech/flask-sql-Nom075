@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Game Over 😵</h2>
+<p>You ran out of lives!</p>
+<a href="{{ url_for('start_game') }}">Try Again</a>
+{% endblock %}
