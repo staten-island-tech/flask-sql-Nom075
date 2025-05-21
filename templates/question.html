@@ -1,14 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
   <h1>Impossible Quiz</h1>
-  <div class="question-text">{{ question.question_text }}</div>
+  <br>
+  <h2><span class="question-number">{{ current_number }}:</span> {{ question.question_text }}</h2>
+
+  
   <form method="POST">
-    <div class="answers">
+    <div class="answers-grid">
       <button type="submit" name="answer" value="A" class="answer-btn">{{ question.option_a }}</button>
       <button type="submit" name="answer" value="B" class="answer-btn">{{ question.option_b }}</button>
       <button type="submit" name="answer" value="C" class="answer-btn">{{ question.option_c }}</button>
       <button type="submit" name="answer" value="D" class="answer-btn">{{ question.option_d }}</button>
     </div>
+    
   </form>
   <p class="lives">Lives remaining: {{ lives }}</p>
 {% endblock %}

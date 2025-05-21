@@ -49,12 +49,10 @@ def play_question():
     if 'lives' not in session or 'current_q' not in session:
         return redirect(url_for('start_game'))
 
-    if session['lives'] <= 0:
-        return render_template('game_over.html')
-
     question_ids = session['question_order']
     current_index = session['current_q']
 
+    # Check for win condition first
     if current_index >= len(question_ids):
         return render_template('you_win.html')
 
@@ -69,7 +67,22 @@ def play_question():
             session['lives'] -= 1
             flash('Wrong answer! You lost a life.', 'danger')
 
-    return render_template('question.html', question=question, lives=session['lives'])
+            # Check for game over after losing a life
+            if session['lives'] <= 0:
+                return redirect(url_for('game_over'))
+
+            return redirect(url_for('play_question'))  # Prevent form resubmission on reload
+
+    return render_template(
+        'question.html',
+        question=question,
+        lives=session['lives'],
+        current_number=session['current_q'] + 1,  # 1-based display
+        total=len(question_ids)
+    )
+
+
+
 
 
 #Updating and changing the questions
@@ -105,6 +118,9 @@ def admin():
     questions = Question.query.all()
     return render_template('admin.html', questions=questions)
 
+@app.route('/game_over')
+def game_over():
+    return render_template('game_over.html')
 
 
 
