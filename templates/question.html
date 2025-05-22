@@ -6,12 +6,13 @@
 
   
   <form method="POST">
-    <div class="answers-grid">
+    <div class="answers">
       <button type="submit" name="answer" value="A" class="answer-btn">{{ question.option_a }}</button>
       <button type="submit" name="answer" value="B" class="answer-btn">{{ question.option_b }}</button>
       <button type="submit" name="answer" value="C" class="answer-btn">{{ question.option_c }}</button>
       <button type="submit" name="answer" value="D" class="answer-btn">{{ question.option_d }}</button>
     </div>
+    
     
   </form>
   <p class="lives">Lives remaining: {{ lives }}</p>

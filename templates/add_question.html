@@ -1,32 +1,37 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Add New Question</h2>
-<form method="POST">
-    <div class="mb-3">
-        <label>Question</label>
-        <input class="form-control" type="text" name="question_text" required>
-    </div>
-    <div class="mb-3">
-        <label>Option A</label>
-        <input class="form-control" type="text" name="option_a" required>
-    </div>
-    <div class="mb-3">
-        <label>Option B</label>
-        <input class="form-control" type="text" name="option_b" required>
-    </div>
-    <div class="mb-3">
-        <label>Option C</label>
-        <input class="form-control" type="text" name="option_c" required>
-    </div>
-    <div class="mb-3">
-        <label>Option D</label>
-        <input class="form-control" type="text" name="option_d" required>
-    </div>
-    <div class="mb-3">
-        <label>Correct Answer (A/B/C/D)</label>
-        <input class="form-control" type="text" name="correct_answer" maxlength="1" required>
-    </div>
-    <button class="btn btn-primary">Submit</button>
-</form>
+  <h2>Add New Question</h2>
+
+  <div style="display: flex; justify-content: center;">
+    <form method="POST" style="width: 100%; max-width: 600px;">
+      <div class="mb-3 text-start">
+        <label for="question_text" class="form-label">Question</label>
+        <input type="text" class="form-control" id="question_text" name="question_text">
+      </div>
+      <div class="mb-3 text-start">
+        <label for="option_a" class="form-label">Option A</label>
+        <input type="text" class="form-control" id="option_a" name="option_a">
+      </div>
+      <div class="mb-3 text-start">
+        <label for="option_b" class="form-label">Option B</label>
+        <input type="text" class="form-control" id="option_b" name="option_b">
+      </div>
+      <div class="mb-3 text-start">
+        <label for="option_c" class="form-label">Option C</label>
+        <input type="text" class="form-control" id="option_c" name="option_c">
+      </div>
+      <div class="mb-3 text-start">
+        <label for="option_d" class="form-label">Option D</label>
+        <input type="text" class="form-control" id="option_d" name="option_d">
+      </div>
+      <div class="mb-3 text-start">
+        <label for="correct_answer" class="form-label">Correct Answer</label>
+        <input type="text" class="form-control" id="correct_answer" name="correct_answer">
+      </div>
+      <div class="text-center">
+        <button type="submit" class="btn btn-success">Add Question</button>
+      </div>
+    </form>
+  </div>
 {% endblock %}

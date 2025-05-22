@@ -56,7 +56,8 @@ def play_question():
     if current_index >= len(question_ids):
         return render_template('you_win.html')
 
-    question = Question.query.get(question_ids[current_index])
+    question = db.session.get(Question, question_ids[current_index])
+
 
     if request.method == 'POST':
         selected = request.form.get('answer')
