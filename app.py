@@ -8,19 +8,39 @@ app.config['SECRET_KEY'] = 'your_secret_key_here'
 
 db.init_app(app)
 
+ADMIN_PASSWORD = 'Hi'
+
 #Adding questions 
 
 @app.route('/add', methods=['GET', 'POST'])
 def add_question():
     if request.method == 'POST':
+        question_text = request.form.get('question_text', '').strip()
+        option_a = request.form.get('option_a', '').strip()
+        option_b = request.form.get('option_b', '').strip()
+        option_c = request.form.get('option_c', '').strip()
+        option_d = request.form.get('option_d', '').strip()
+        correct_answer = request.form.get('correct_answer', '').strip().upper()
+
+        # At least one option must be filled
+        options = {'A': option_a, 'B': option_b, 'C': option_c, 'D': option_d}
+        if all(not opt for opt in options.values()):
+            flash("At least one answer option must be provided.", "danger")
+            return render_template('add_question.html')
+
+        # Correct answer must be one of the non-empty options
+        if correct_answer not in options or not options[correct_answer]:
+            flash("Correct answer must be A, B, C, or D and can not be empty.", "danger")
+            return render_template('add_question.html')
+
         try:
             new_q = Question(
-                question_text=request.form['question_text'],
-                option_a=request.form['option_a'],
-                option_b=request.form['option_b'],
-                option_c=request.form['option_c'],
-                option_d=request.form['option_d'],
-                correct_answer=request.form['correct_answer'].upper()
+                question_text=question_text,
+                option_a=option_a,
+                option_b=option_b,
+                option_c=option_c,
+                option_d=option_d,
+                correct_answer=correct_answer
             )
             db.session.add(new_q)
             db.session.commit()
@@ -28,7 +48,10 @@ def add_question():
             return redirect(url_for('admin'))
         except Exception as e:
             flash(f"Error: {e}", "danger")
+
     return render_template('add_question.html')
+
+
 
 #Read the questions
 
@@ -41,7 +64,7 @@ def start_game():
     session['lives'] = 3
     session['current_q'] = 0
     session['question_order'] = [q.id for q in Question.query.all()]
-    random.shuffle(session['question_order'])
+    """ random.shuffle(session['question_order']) """    #shuffle questions?
     return redirect(url_for('play_question'))
 
 @app.route('/play', methods=['GET', 'POST'])
@@ -114,17 +137,44 @@ def delete_question(question_id):
 
 #Admin dashboard
 
-@app.route('/admin')
-def admin():
-    questions = Question.query.all()
-    return render_template('admin.html', questions=questions)
-
 @app.route('/game_over')
 def game_over():
     return render_template('game_over.html')
 
+@app.route('/restart')
+def restart_quiz():
+    session.pop('question_index', None)
+    session.pop('lives', None)
+    session.pop('question_ids', None)
+    return redirect(url_for('start_game'))
 
 
+@app.route('/admin-login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        password = request.form.get('password')
+        if password == ADMIN_PASSWORD:
+            session['admin_authenticated'] = True
+            return redirect(url_for('admin'))
+        else:
+            flash('Incorrect password. Try again.', 'danger')
+    return render_template('admin_login.html')
+
+
+
+@app.route('/admin')
+def admin():
+    if not session.get('admin_authenticated'):
+        return redirect(url_for('admin_login'))
+
+    questions = Question.query.all()
+    return render_template('admin.html', questions=questions)
+
+
+@app.route('/admin-logout')
+def admin_logout():
+    session.pop('admin_authenticated', None)
+    return redirect(url_for('index'))
 
 
 
