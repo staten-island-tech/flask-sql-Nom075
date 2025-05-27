@@ -8,13 +8,14 @@ app.config['SECRET_KEY'] = 'your_secret_key_here'
 
 db.init_app(app)
 
-ADMIN_PASSWORD = 'Hi'
+ADMIN_PASSWORD = 'пароль'
 
 #Adding questions 
 
 @app.route('/add', methods=['GET', 'POST'])
 def add_question():
     if request.method == 'POST':
+        # Grab form data safely
         question_text = request.form.get('question_text', '').strip()
         option_a = request.form.get('option_a', '').strip()
         option_b = request.form.get('option_b', '').strip()
@@ -22,17 +23,33 @@ def add_question():
         option_d = request.form.get('option_d', '').strip()
         correct_answer = request.form.get('correct_answer', '').strip().upper()
 
-        # At least one option must be filled
+        # Validation logic
         options = {'A': option_a, 'B': option_b, 'C': option_c, 'D': option_d}
-        if all(not opt for opt in options.values()):
-            flash("At least one answer option must be provided.", "danger")
-            return render_template('add_question.html')
+        if all(not val for val in options.values()):
+            flash("At least one answer option must be filled.", "danger")
+            return render_template(
+                'add_question.html',
+                question_text=question_text,
+                option_a=option_a,
+                option_b=option_b,
+                option_c=option_c,
+                option_d=option_d,
+                correct_answer=correct_answer
+            )
 
-        # Correct answer must be one of the non-empty options
         if correct_answer not in options or not options[correct_answer]:
-            flash("Correct answer must be A, B, C, or D and can not be empty.", "danger")
-            return render_template('add_question.html')
+            flash("Correct answer must match one of the provided options and not be empty.", "danger")
+            return render_template(
+                'add_question.html',
+                question_text=question_text,
+                option_a=option_a,
+                option_b=option_b,
+                option_c=option_c,
+                option_d=option_d,
+                correct_answer=correct_answer
+            )
 
+        # If all checks pass, save to DB
         try:
             new_q = Question(
                 question_text=question_text,
@@ -47,9 +64,20 @@ def add_question():
             flash("Question added successfully!", "success")
             return redirect(url_for('admin'))
         except Exception as e:
-            flash(f"Error: {e}", "danger")
+            flash(f"Database error: {e}", "danger")
+            return render_template(
+                'add_question.html',
+                question_text=question_text,
+                option_a=option_a,
+                option_b=option_b,
+                option_c=option_c,
+                option_d=option_d,
+                correct_answer=correct_answer
+            )
 
+    # GET request: show the blank form
     return render_template('add_question.html')
+
 
 
 
